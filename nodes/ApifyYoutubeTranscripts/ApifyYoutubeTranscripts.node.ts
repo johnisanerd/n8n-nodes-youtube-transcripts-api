@@ -5,29 +5,29 @@ import {
 	INodeTypeDescription,
 	NodeConnectionType,
 } from 'n8n-workflow';
-import { properties } from './ApifyActorTemplate.properties';
+import { properties } from './ApifyYoutubeTranscripts.properties';
 import { runActor } from './helpers/executeActor';
 
 // SNIPPET 1: Make sure the constants are correct
-export const ACTOR_ID = '$$ACTOR_ID' as string;
+export const ACTOR_ID = 'zPumutvB61fpEsglh' as string;
 
-export const PACKAGE_NAME = '$$PACKAGE_NAME' as string;
-export const CLASS_NAME = '$$CLASS_NAME' as string;
+export const PACKAGE_NAME = 'n8n-nodes-youtube-transcripts-api' as string;
+export const CLASS_NAME = 'ApifyYoutubeTranscripts' as string;
 export const ClassNameCamel = CLASS_NAME.charAt(0).toLowerCase() + CLASS_NAME.slice(1); // make the first letter lowercase for name fields
 
-export const X_PLATFORM_HEADER_ID = '$$X_PLATFORM_HEADER_ID' as string;
-export const X_PLATFORM_APP_HEADER_ID = '$$X_PLATFORM_APP_HEADER_ID' as string;
+export const X_PLATFORM_HEADER_ID = 'n8n' as string;
+export const X_PLATFORM_APP_HEADER_ID = 'YoutubeTranscripts-app' as string;
 
-export const DISPLAY_NAME = '$$DISPLAY_NAME' as string;
-export const DESCRIPTION = '$$DESCRIPTION' as string;
+export const DISPLAY_NAME = 'Apify YouTube Transcript & Subtitles Scraper API' as string;
+export const DESCRIPTION = 'Scrape YouTube transcripts, subtitles, and captions in bulk, the cheapest pay-per-video YouTube transcript API on Apify. Callable from any MCP client (Claude, Cursor, ChatGPT). Supports YouTube videos, Shorts, and every URL format.' as string;
 
-export class ApifyActorTemplate implements INodeType {
+export class ApifyYoutubeTranscripts implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: DISPLAY_NAME,
 		name: ClassNameCamel,
 
 		// SNIPPET 2: Adjust the icon of your app
-		icon: 'file:logo.svg',
+		icon: 'file:logo.png',
 		group: ['transform'],
 		// Mismatched version and defaultVersion as a minor hack to hide "Custom API Call" resource
 		version: [1],
