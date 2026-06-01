@@ -1,16 +1,29 @@
 {
 	"name": "n8n-nodes-youtube-transcripts-api",
-	"version": "0.0.0",
-	"description": "PACKAGE_DESCRIPTION",
+	"version": "0.1.0",
+	"description": "Bulk YouTube transcript, subtitle & caption scraper for n8n — Apify-backed, pay-per-video, usable as an AI agent tool.",
 	"keywords": [
 		"n8n-community-node-package",
 		"n8n-nodes",
-		"n8n"
+		"n8n",
+		"youtube",
+		"transcript",
+		"subtitles",
+		"captions",
+		"ai-tool"
 	],
 	"license": "MIT",
 	"author": {
-		"name": "AUTHOR_NAME",
-		"email": "AUTHOR_EMAIL"
+		"name": "John Cole",
+		"email": "29712567+johnisanerd@users.noreply.github.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/johnisanerd/n8n-nodes-youtube-transcripts-api.git"
+	},
+	"homepage": "https://github.com/johnisanerd/n8n-nodes-youtube-transcripts-api#readme",
+	"bugs": {
+		"url": "https://github.com/johnisanerd/n8n-nodes-youtube-transcripts-api/issues"
 	},
 	"engines": {
 		"node": ">=18.10"

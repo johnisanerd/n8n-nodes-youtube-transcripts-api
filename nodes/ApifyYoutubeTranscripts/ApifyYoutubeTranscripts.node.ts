@@ -3,7 +3,9 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	NodeConnectionType,
+	JsonObject,
+	NodeApiError,
+	NodeConnectionTypes,
 } from 'n8n-workflow';
 import { properties } from './ApifyYoutubeTranscripts.properties';
 import { runActor } from './helpers/executeActor';
@@ -18,8 +20,8 @@ export const ClassNameCamel = CLASS_NAME.charAt(0).toLowerCase() + CLASS_NAME.sl
 export const X_PLATFORM_HEADER_ID = 'n8n' as string;
 export const X_PLATFORM_APP_HEADER_ID = 'YoutubeTranscripts-app' as string;
 
-export const DISPLAY_NAME = 'Apify YouTube Transcript & Subtitles Scraper API' as string;
-export const DESCRIPTION = 'Scrape YouTube transcripts, subtitles, and captions in bulk, the cheapest pay-per-video YouTube transcript API on Apify. Callable from any MCP client (Claude, Cursor, ChatGPT). Supports YouTube videos, Shorts, and every URL format.' as string;
+export const DISPLAY_NAME = 'YouTube Transcripts' as string;
+export const DESCRIPTION = 'Bulk-extract transcripts, subtitles, and captions from YouTube videos and Shorts' as string;
 
 export class ApifyYoutubeTranscripts implements INodeType {
 	description: INodeTypeDescription = {
@@ -27,22 +29,22 @@ export class ApifyYoutubeTranscripts implements INodeType {
 		name: ClassNameCamel,
 
 		// SNIPPET 2: Adjust the icon of your app
-		icon: 'file:logo.png',
+		icon: 'file:logo.svg',
 		group: ['transform'],
 		// Mismatched version and defaultVersion as a minor hack to hide "Custom API Call" resource
 		version: [1],
 		defaultVersion: 1,
 
 		// SNIPPET 3: Adjust the subtitle for your Actor app.
-		subtitle: 'Run Scraper',
+		subtitle: 'Get Transcripts',
 		
 		// SNIPPET 4: Make sure the description is not too large, 1 sentence should be ideal.
 		description: DESCRIPTION,
 		defaults: {
 			name: DISPLAY_NAME,
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,
 		credentials: [
 			{
@@ -77,26 +79,18 @@ export class ApifyYoutubeTranscripts implements INodeType {
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const data = await runActor.call(this, i);
-
-				const addPairedItem = (item: INodeExecutionData) => ({
-					...item,
-					pairedItem: { item: i },
-				});
-
-				if (Array.isArray(data)) {
-					returnData.push(...data.map(addPairedItem));
-				} else {
-					returnData.push(addPairedItem(data));
+				for (const item of data) {
+					returnData.push({ ...item, pairedItem: { item: i } });
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({
-						json: { error: error.message },
+						json: { error: (error as Error).message },
 						pairedItem: { item: i },
 					});
 					continue;
 				}
-				throw error;
+				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
 			}
 		}
 

@@ -3,12 +3,9 @@
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": [
-		"Development",
-		"Marketing & Content",
-		"Sales",
-		"Analytics",
-		"Utility",
-		"Data & Storage"
+		"Data & Storage",
+		"AI",
+		"Marketing & Content"
 	],
 	"resources": {
 		"credentialDocumentation": [
@@ -23,16 +20,16 @@
 		]
 	},
 	"alias": [
-		"apify",
-		"actor",
-		"serp",
+		"youtube",
+		"transcript",
+		"transcripts",
+		"subtitle",
+		"subtitles",
+		"captions",
+		"video",
+		"shorts",
 		"llm",
-		"ai agent",
-		"scrape",
-		"crawler",
-		"web",
-		"dataset",
-		"search",
-		"data extraction"
+		"ai",
+		"rag"
 	]
 }

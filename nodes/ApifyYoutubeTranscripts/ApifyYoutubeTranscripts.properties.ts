@@ -1,40 +1,10 @@
 import { IExecuteFunctions, INodeProperties } from 'n8n-workflow';
 
-// Helper functions for parameter extraction
-function getFixedCollectionParam(
-	context: IExecuteFunctions,
-	paramName: string,
-	itemIndex: number,
-	optionName: string,
-	transformType: 'passthrough' | 'mapValues',
-): Record<string, any> {
-	const param = context.getNodeParameter(paramName, itemIndex, {}) as { [key: string]: any[] };
-	if (!param?.[optionName]?.length) return {};
-
-	let result = param[optionName];
-	if (transformType === 'mapValues') {
-		result = result.map((item: any) => item.value);
-	}
-	return { [paramName]: result };
-}
-
-function getJsonParam(context: IExecuteFunctions, paramName: string, itemIndex: number): Record<string, any> {
-	try {
-		const rawValue = context.getNodeParameter(paramName, itemIndex);
-		if (typeof rawValue === 'string' && rawValue.trim() === '') {
-			return {};
-		}
-		return { [paramName]: typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue };
-	} catch (error) {
-		throw new Error(`Invalid JSON in parameter "${paramName}": ${(error as Error).message}`);
-	}
-}
-
-function getOptionalParam(context: IExecuteFunctions, paramName: string, itemIndex: number): Record<string, any> {
-	const value = context.getNodeParameter(paramName, itemIndex);
-	return value !== undefined && value !== null && value !== '' ? { [paramName]: value } : {};
-}
-
+/**
+ * Build the Apify Actor input from node parameters.
+ * Only `youtube_url` is sent to the Actor; the Output / Fields parameters
+ * shape the data we return, they are not part of the Actor input.
+ */
 export function buildActorInput(
 	context: IExecuteFunctions,
 	itemIndex: number,
@@ -42,10 +12,130 @@ export function buildActorInput(
 ): Record<string, any> {
 	return {
 		...defaultInput,
-		// YouTube URL(s) (youtube_url)
 		youtube_url: context.getNodeParameter('youtube_url', itemIndex),
 	};
 }
+
+const resourceProperties: INodeProperties[] = [
+	{
+		displayName: 'Resource',
+		name: 'resource',
+		type: 'options',
+		noDataExpression: true,
+		options: [
+			{
+				name: 'Transcript',
+				value: 'transcript',
+			},
+		],
+		default: 'transcript',
+	},
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: {
+			show: {
+				resource: ['transcript'],
+			},
+		},
+		options: [
+			{
+				name: 'Get Transcripts',
+				value: 'getTranscripts',
+				action: 'Get transcripts from one or more videos',
+				description:
+					'Retrieve transcripts, subtitles, and captions from one or more YouTube videos',
+			},
+		],
+		default: 'getTranscripts',
+	},
+];
+
+const actorProperties: INodeProperties[] = [
+	{
+		displayName: 'YouTube URL or URLs',
+		name: 'youtube_url',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+		description:
+			'One YouTube URL as a string, or multiple URLs as an array. Supports standard videos, Shorts, youtu.be short links, embed URLs, and mobile URLs.',
+		displayOptions: {
+			show: {
+				resource: ['transcript'],
+				operation: ['getTranscripts'],
+			},
+		},
+	},
+];
+
+const outputProperties: INodeProperties[] = [
+	{
+		displayName: 'Output',
+		name: 'output',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: {
+			show: {
+				resource: ['transcript'],
+				operation: ['getTranscripts'],
+			},
+		},
+		options: [
+			{
+				name: 'Raw',
+				value: 'raw',
+				description: 'Return every field the Actor produces, including timestamped segments',
+			},
+			{
+				name: 'Selected Fields',
+				value: 'selected',
+				description: 'Choose exactly which fields to return',
+			},
+			{
+				name: 'Simplified',
+				value: 'simplified',
+				description: 'Return only the video ID, language, and full transcript text',
+			},
+		],
+		default: 'simplified',
+		description: 'How much of the Actor result to return for each video',
+	},
+	{
+		displayName: 'Fields to Include',
+		name: 'fields',
+		type: 'multiOptions',
+		displayOptions: {
+			show: {
+				resource: ['transcript'],
+				operation: ['getTranscripts'],
+				output: ['selected'],
+			},
+		},
+		options: [
+			{ name: 'Error', value: 'error' },
+			{ name: 'Error Message', value: 'error_message' },
+			{ name: 'Error Type', value: 'error_type' },
+			{ name: 'Full Transcript', value: 'non_timestamped' },
+			{ name: 'Is Auto-Generated', value: 'is_generated' },
+			{ name: 'Is Translatable', value: 'is_translatable' },
+			{ name: 'Language', value: 'language' },
+			{ name: 'Language Code', value: 'language_code' },
+			{ name: 'Processing Timestamp', value: 'timestamp' },
+			{ name: 'Success', value: 'success' },
+			{ name: 'Timestamped Transcript', value: 'timestamped' },
+			{ name: 'Total Duration (Seconds)', value: 'total_seconds' },
+			{ name: 'Translation Languages', value: 'translation_languages' },
+			{ name: 'URL', value: 'url' },
+			{ name: 'Video ID', value: 'video_id' },
+		],
+		default: ['video_id', 'language', 'non_timestamped'],
+		description: 'Which fields to return when Output is set to Selected Fields',
+	},
+];
 
 const authenticationProperties: INodeProperties[] = [
 	{
@@ -67,15 +157,9 @@ const authenticationProperties: INodeProperties[] = [
 	},
 ];
 
-export const actorProperties: INodeProperties[] = [
-  {
-    "displayName": "YouTube URL(s)",
-    "name": "youtube_url",
-    "description": "Provide one YouTube URL as a string, or multiple as an array. Works with standard videos, Shorts, youtu.be short links, embed URLs, and m.youtube.com mobile URLs. Each URL is processed in parallel. Invalid URLs are recorded as errors in the dataset but do not stop the run. Charged per video successfully transcribed.",
-    "required": true,
-    "default": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "type": "string"
-  }
+export const properties: INodeProperties[] = [
+	...resourceProperties,
+	...actorProperties,
+	...outputProperties,
+	...authenticationProperties,
 ];
-
-export const properties: INodeProperties[] = [...actorProperties, ...authenticationProperties];
